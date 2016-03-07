@@ -44,7 +44,7 @@ requires = [
 ]
 
 setup(name='rcquerybuilder',
-      version='0.1.0',
+      version='0.1.1',
       url='http://github.com/red-crown/mongo-querybuilder/',
       description='Provides a fluent query builder wrapper around pymongo',
       long_description=README + '\n\n' + HISTORY,
