@@ -44,16 +44,19 @@ requires = [
 ]
 
 setup(name='rcquerybuilder',
-      version='0.1.1',
+      version='0.1.2',
       url='http://github.com/red-crown/mongo-querybuilder/',
       description='Provides a fluent query builder wrapper around pymongo',
       long_description=README + '\n\n' + HISTORY,
       author='Matthew Strickland',
       author_email='matthew@redcrown.co',
       license=LICENSE,
-      tests_require=['pytest'],
+      tests_require=['pytest', 'pytest-cov'],
       platforms='any',
       zip_safe=False,
+      package_data={'': ['LICENSE', 'README.rst', 'HISTORY.rst']},
+      package_dir={'rcquerybuilder': 'rcquerybuilder'},
+      include_package_data=True,
       install_requires=requires,
       classifiers=[
           'Intended Audience :: Developers',
