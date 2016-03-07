@@ -1,6 +1,7 @@
 import unittest
 
 from rcquerybuilder.builder import Builder
+from rcquerybuilder.builder import QueryTypes
 
 
 class BasicTestSuite(unittest.TestCase):
@@ -58,6 +59,20 @@ class BasicTestSuite(unittest.TestCase):
         assert {'name': 'awesome',
                 'age': 21,
                 'attributes': [0, 1, 2, 3]} == insert_query
+
+    def test_count_query(self):
+        qb = Builder(collection=None)
+
+        qb.count() \
+            .field('name').ne('awesome') \
+            .field('age').lte(45)
+
+        query_list = qb.get_query_list()
+
+        assert {'name': {'$ne': 'awesome'},
+                'age': {'$lte': 45}} == query_list
+
+        assert qb.build().query['type'] == QueryTypes.TYPE_COUNT
 
 
 if __name__ == '__main__':

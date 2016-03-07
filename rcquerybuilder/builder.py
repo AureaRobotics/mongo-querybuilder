@@ -107,6 +107,11 @@ class Builder(object):
 
         return self
 
+    def count(self):
+        self.query['type'] = QueryTypes.TYPE_COUNT
+
+        return self
+
     def build(self, **kwargs):
         query = self.query
         query['query'] = self.expression.query
@@ -167,6 +172,10 @@ class Query(object):
 
     def execute(self):
         options = self.options
+
+        if self.query['type'] == QueryTypes.TYPE_COUNT:
+            return self.collection.find(self.query['query'],
+                                        self.query['select'] if self.query.setdefault('select', []) else None).count()
 
         # FIND
         if self.query['type'] == QueryTypes.TYPE_FIND:
