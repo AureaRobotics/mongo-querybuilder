@@ -299,5 +299,3 @@ texinfo_documents = [
 
 # -- Options for Napoleon extension ---------------------------------------
 napoleon_google_docstring = True
-napoleon_include_private_with_doc = True
-napoleon_include_special_with_doc = True
