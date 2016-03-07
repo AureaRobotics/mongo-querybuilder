@@ -25,14 +25,21 @@ import os
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.0'
 
+# Whether we are local or on readthedocs.
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
-    'sphinx.ext.napoleon'
 ]
+
+if not on_rtd:
+    extensions.append('sphinx.ext.napoleon')
+else:
+    extensions.append('sphinxcontrib.napoleon')
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -108,8 +115,6 @@ todo_include_todos = False
 
 
 # -- Options for HTML output ----------------------------------------------
-
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 if not on_rtd:
     import sphinx_rtd_theme
