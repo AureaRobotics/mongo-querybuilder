@@ -35,6 +35,6 @@ How to Contribute
 #. Send a pull request and make sure to add yourself to AUTHORS_.
 
 .. _`the repository`: http://github.com/red-crown/mongo-querybuilder
-.. _AUTHORS: https://github.com/red-crown/requests/blob/master/AUTHORS.rst
+.. _AUTHORS: https://github.com/red-crown/mongo-querybuilder/blob/master/AUTHORS.rst
 
 

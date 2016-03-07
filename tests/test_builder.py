@@ -36,7 +36,7 @@ class BasicTestSuite(unittest.TestCase):
             .field('counter').inc(1) \
             .field('some_list').push({'name': 'testing', 'value': 'cool'})
 
-        query_parts = qb.get_query().query
+        query_parts = qb.build().query
 
         assert {'foo': 'bar',
                 'totals': {'$gt': 10}} == query_parts['query']
@@ -53,7 +53,7 @@ class BasicTestSuite(unittest.TestCase):
             .field('age').set(21) \
             .field('attributes').set([0, 1, 2, 3])
 
-        insert_query = qb.get_query().query['newObj']
+        insert_query = qb.build().query['newObj']
 
         assert {'name': 'awesome',
                 'age': 21,

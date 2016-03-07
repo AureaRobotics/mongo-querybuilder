@@ -18,10 +18,10 @@ Example:
 
         # The query object forwards it's query to the collection
         # on on the ``execute()`` call.
-        query = qb.get_query()
+        query = qb.build()
 
         # cursor is a ``pymongo.cursor.Cursor`` instance.
-        cursor = qb.get_query().execute()
+        cursor = qb.build().execute()
 
         # Which is equivalent to:
         collection.find({'name': {'$nin': ['Matthew', 'Boris']},
@@ -36,7 +36,7 @@ Example:
           .field('counter').inc(1) \\
           .field('some_list').push({'name': 'testing', 'value': 'cool'})
 
-        update_result = qb.get_query().execute()
+        update_result = qb.build().execute()
 
         # Which is equivalent to:
         collection.update_many(
@@ -105,7 +105,7 @@ class Builder(object):
 
         return self
 
-    def get_query(self, **kwargs):
+    def build(self, **kwargs):
         query = self.query
         query['query'] = self.expression.query
         query['newObj'] = self.expression.new_obj
