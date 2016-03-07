@@ -14,11 +14,9 @@ class PipelineExpr(Expr):
         self.query = SON()
 
     def operator(self, operator, value_or_expression):
-        # self._requires_current_field()
-
         if isinstance(value_or_expression, (list, tuple)):
-            expression = [_get_query(expr)
-                          for expr in value_or_expression]
+            expression = [_get_query(voe)
+                          for voe in value_or_expression]
         else:
             expression = _get_query(value_or_expression)
 

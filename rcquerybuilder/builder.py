@@ -49,6 +49,7 @@ Example:
         )
 
 """
+from bson.son import SON
 
 
 def expr():
@@ -60,6 +61,7 @@ def expr():
     return Expr()
 
 
+# noinspection PyTypeChecker
 class Builder(object):
     def __init__(self, collection):
         self.collection = collection
@@ -173,7 +175,7 @@ class Query(object):
                     self.query['select'] if self.query.setdefault('select', []) else None
             )
 
-            return self._prepare_cursor(cursor)
+            return cursor
 
         # INSERT
         if self.query['type'] == QueryTypes.TYPE_INSERT:
@@ -195,44 +197,6 @@ class Query(object):
         # REMOVE
         if self.query['type'] == QueryTypes.TYPE_REMOVE:
             return self.collection.remove(self.query['query'], options)
-
-        # GROUP
-        if self.query['type'] == QueryTypes.TYPE_GROUP:
-            if 'query' in self.query and self.query['query']:
-                options['cond'] = self.query['query']
-
-            collection = self.collection
-            query = self.query
-
-            def closure():
-                group_options = query['group']['options']
-                group_options.update(options)
-                return collection.group(
-                        query['group']['keys'],
-                        query['group']['initial'],
-                        query['group']['reduce'],
-                        group_options
-                )
-
-            return closure()
-
-    def _prepare_cursor(self, cursor):
-        return cursor
-
-    def __with_read_preference(self, object, func):
-        if not self.query.setdefault('readPreference', False):
-            return func()
-
-        prev_read_pref = object.read_preference
-        object.read_preference = self.query['readPreference'], self.query['readPreferenceTags']
-
-        try:
-            return func()
-        except Exception as e:
-            raise e
-        finally:
-            prev_tags = prev_read_pref['tagsets'] if 'tagsets' in prev_read_pref else None
-            object.read_preference = prev_read_pref['type'], prev_tags
 
     def _get_query_options(self, *args):
         return {key: self.query[key]
@@ -376,20 +340,23 @@ class Expr(object):
     def gte(self, value):
         return self.operator('$gte', value)
 
+    def lt(self, value):
+        return self.operator('$lt', value)
+
+    def lte(self, value):
+        return self.operator('$lte', value)
+
     def is_in(self, values):
         return self.operator('$in', list(values.values()) if isinstance(values, dict) else values)
+
+    def is_not_in(self, values):
+        return self.operator('$nin', list(values.values()) if isinstance(values, dict) else values)
 
     def inc(self, value):
         self._requires_current_field()
         self.new_obj.setdefault('$inc', {})[self.current_field] = value
 
         return self
-
-    def lt(self, value):
-        return self.operator('$lt', value)
-
-    def lte(self, value):
-        return self.operator('$lte', value)
 
     def max(self, value):
         self._requires_current_field()
@@ -418,8 +385,31 @@ class Expr(object):
     def ne(self, value):
         return self.operator('$ne', value)
 
-    def is_not_in(self, values):
-        return self.operator('$nin', list(values.values()) if isinstance(values, dict) else values)
+    def text(self, search, language=None, case_sensitive=False, diacritic_sensitive=False):
+        search_expression = {
+            '$search': search,
+            '$language': language,
+            '$caseSensitive': bool(case_sensitive),
+            '$diacriticSensitive': bool(diacritic_sensitive),
+        }
+
+        if search_expression['$language'] is None:
+            # We need to exclude the property to force mongo to use it's default.
+            del search_expression['$language']
+
+        return self.operator('$text', search_expression)
+
+    def search(self, search, language=None, case_sensitive=False, diacritic_sensitive=False):
+        return self.text(search=search,
+                         language=language,
+                         case_sensitive=case_sensitive,
+                         diacritic_sensitive=diacritic_sensitive)
+
+    def null(self):
+        return self.equals(None)
+
+    def not_null(self):
+        return self.ne(None)
 
     def pop_first(self):
         self._requires_current_field()
@@ -467,12 +457,6 @@ class Expr(object):
     def range(self, start, end):
         return self.operator('$gte', start).operator('$lt', end)
 
-    def not_null(self):
-        return self.not_equals(None)
-
-    def is_null(self):
-        return self.equals(None)
-
     def regex(self, pattern):
         return self.operator('$regex', pattern)
 
@@ -509,19 +493,18 @@ class Expr(object):
     def size(self, size):
         return self.operator('$size', size)
 
-    def slice(self, slice):
-        return self.operator('$slice', slice)
+    def slice(self, size):
+        return self.operator('$slice', size)
 
-    def sort(self, field_name, order=None):
-        fields = field_name if isinstance(field_name, dict) else {field_name: order}
-        sort = {}
+    def sort(self, *sort_criteria):
+        if not sort_criteria:
+            raise ValueError('This method requires the criteria for the sort.')
 
-        for field_name, order in fields.iteritems():
-            if isinstance(order, basestring):
-                order = 1 if order.lower() == 'asc' else -1
-            sort[field_name] = int(order)
+        sort_criteria = SON(sort_criteria[0]
+                            if isinstance(sort_criteria[0], list)
+                            else sort_criteria)
 
-        return self.operator('$sort', sort)
+        return self.operator('$sort', sort_criteria)
 
     def is_type(self, type):
         if isinstance(type, basestring):
@@ -581,17 +564,16 @@ class Expr(object):
         else:
             query = self.query
 
-        if isinstance(query, dict) and (not query or query.keys()[0][0] == '$'):
-            # If the query is an empty dictionary, we'll assume that the user has not
-            # specified criteria. Otherwise, check if the dictionary includes a query
-            # operator (checking the first key is sufficient). If neither of these
-            # conditions are met, we'll wrap the query values with $in.
+        if isinstance(query, (dict, SON)) and (not query or query.keys()[0][0] == '$'):
+            # Don't do anything if we already have a query dictionary
+            # and it's either empty or already a "query" dictionary.
+            # We can assume this when "$" is the first character of the first key.
             return
 
         if self.current_field:
-            self.query[self.current_field] = {'$eq': self.query[self.current_field]}
+            self.query[self.current_field] = {'$in': [self.query[self.current_field]]}
         else:
-            self.query = {'$eq': self.query}
+            self.query = {'$in': [self.query]}
 
 
 def _get_query(expr):
