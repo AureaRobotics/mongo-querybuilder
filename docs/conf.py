@@ -33,7 +33,6 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
 ]
 
 if on_rtd:
