@@ -1,3 +1,65 @@
+"""redCrown MongoDB QueryBuilder
+
+This module contains the builder and query classes for usage with ``pymongo``.
+
+Example:
+
+    Basic Usage (select/find queries)::
+
+        import pymongo
+
+        mongo = pymongo.MongoClient()
+        db = mongo['db_foobar']
+
+        qb = Builder(collection=db['collection_foobar'])
+        qb.field('name').is_not_in(['Matthew', 'Boris']) \\
+          .field('age').gte(21) \\
+          .field('attributes').is_type('object')
+
+        # The query object forwards it's query to the collection
+        # on on the ``execute()`` call.
+        query = qb.get_query()
+
+        # cursor is a ``pymongo.cursor.Cursor`` instance.
+        cursor = qb.get_query().execute()
+
+        # Which is equivalent to:
+        collection.find({'name': {'$nin': ['Matthew', 'Boris']},
+                         'age': {'$gte': 21},
+                         'attributes': {'$type': 3}})
+
+    Update Queries::
+
+        qb.update(multi=True) \\
+          .field('foo').equals('bar').set('buzz') \\
+          .field('totals').gt(10) \\
+          .field('counter').inc(1) \\
+          .field('some_list').push({'name': 'testing', 'value': 'cool'})
+
+        update_result = qb.get_query().execute()
+
+        # Which is equivalent to:
+        collection.update_many(
+            {'foo': 'bar', 'totals': {'$gt': 10}},
+            {
+                '$set': {'foo': 'buzz'},
+                '$inc': {'counter': 1},
+                '$push': {'some_list': {'name': 'testing', 'value': 'cool'}}
+            }
+        )
+
+"""
+
+
+def expr():
+    """Get a new ``Expr`` instance.
+
+    Returns:
+        Expr: The ``Expr`` instance.
+    """
+    return Expr()
+
+
 class Builder(object):
     def __init__(self, collection):
         self.collection = collection
