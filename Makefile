@@ -12,7 +12,16 @@ coverage:
 publish:
 	python setup.py register
 	python setup.py sdist upload
-	python setup.py bdist_wheel --universal upload
+	python setup.py bdist_egg --plat-name universal upload
+	rm -fr build dist .egg rcquerybuilder.egg-info
+
+publish-sign:
+	python setup.py register
+	python setup.py sdist upload --sign --identity 8826CCF8
+	python setup.py bdist_egg --plat-name universal upload --sign --identity 8826CCF8
+	rm -fr build dist .egg rcquerybuilder.egg-info
+
+clean:
 	rm -fr build dist .egg rcquerybuilder.egg-info
 
 docs:
