@@ -1,3 +1,9 @@
+"""Pipeline module.
+
+This module provides a fluent api around mongo's aggregation pipeline.
+
+"""
+
 from bson.son import SON
 
 from rcquerybuilder.builder import Expr
@@ -5,6 +11,11 @@ from rcquerybuilder.builder import _get_query
 
 
 def expr():
+    """Creates a new ``PipelineExpr``. Useful for chaining.
+
+    Returns:
+        PipelineExpr: The created ``PipelineExpr``.
+    """
     return PipelineExpr()
 
 

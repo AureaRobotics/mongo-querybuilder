@@ -25,10 +25,10 @@ class PyTest(TestCommand):
 
         sys.exit(pytest.main(self.pytest_args))
 
+
 if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
     sys.exit()
-
 
 with open('README.rst', 'r', 'utf-8') as f:
     README = f.read().strip()
