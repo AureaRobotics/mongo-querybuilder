@@ -36,10 +36,10 @@ extensions = [
     'sphinx.ext.doctest',
 ]
 
-if not on_rtd:
-    extensions.append('sphinx.ext.napoleon')
-else:
+if on_rtd:
     extensions.append('sphinxcontrib.napoleon')
+else:
+    extensions.append('sphinx.ext.napoleon')
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
