@@ -516,7 +516,7 @@ class Expr(object):
         return self.operator('$sort', sort_criteria)
 
     def is_type(self, type):
-        if isinstance(type, basestring):
+        if isinstance(type, str):
             type = type.lower()
             _map = {
                 'double': 1,
@@ -573,7 +573,8 @@ class Expr(object):
         else:
             query = self.query
 
-        if isinstance(query, (dict, SON)) and (not query or query.keys()[0][0] == '$'):
+        keys = list(query.keys())
+        if isinstance(query, (dict, SON)) and (not query or keys[0][0] == '$'):
             # Don't do anything if we already have a query dictionary
             # and it's either empty or already a "query" dictionary.
             # We can assume this when "$" is the first character of the first key.

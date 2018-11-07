@@ -10,11 +10,11 @@ class BasicTestSuite(unittest.TestCase):
     def test_basic_fluent_api(self):
         qb = Builder(collection=None)
 
-        qb.field('name').equals('foobar').field('fizz').ne(None)
+        qb.field('name').equals('foobar').field('fizz').ne(None).field('number').range(1,20)
 
         query_list = qb.get_query_list()
 
-        assert query_list == {'name': 'foobar', 'fizz': {'$ne': None}}
+        assert query_list == {'name': 'foobar', 'fizz': {'$ne': None}, 'number': {'$gte': 1, '$lt': 20}}
 
     def test_find_query(self):
         qb = Builder(collection=None)
